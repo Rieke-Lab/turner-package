@@ -141,11 +141,11 @@ classdef AreaSummationFigure < symphonyui.core.FigureHandler
         
         function onSelectedFitDoG(obj, ~, ~)
             params0 = [max(obj.summaryData.meanResponses) / 2,50,...
-                max(obj.summaryData.meanResponses) / 2, 150];
-            [Kc, sigmaC, Ks, sigmaS] = ...
+                max(obj.summaryData.meanResponses) / 2, 150,0];
+            [Kc, sigmaC, Ks, sigmaS, baseFiring] = ...
                 edu.washington.riekelab.turner.utils.fitDoGAreaSummation(obj.summaryData.spotSizes,obj.summaryData.meanResponses,params0);
             fitX = 0:(1.1*max(obj.summaryData.spotSizes));
-            fitY = edu.washington.riekelab.turner.utils.DoGAreaSummation([Kc sigmaC Ks sigmaS], fitX);
+            fitY = edu.washington.riekelab.turner.utils.DoGAreaSummation([Kc sigmaC Ks sigmaS baseFiring], fitX);
             
             if isempty(obj.fitLineHandle)
                 obj.fitLineHandle = line(fitX, fitY, 'Parent', obj.axesHandle);

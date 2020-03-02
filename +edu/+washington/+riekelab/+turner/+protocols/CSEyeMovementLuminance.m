@@ -4,7 +4,7 @@ classdef CSEyeMovementLuminance < edu.washington.riekelab.protocols.RiekeLabStag
         preTime = 250 % ms
         stimTime = 5200 % ms, 5200 is longest trajectory in database
         tailTime = 250 % ms
-        stimulusIndex = 1 % 1-433
+        stimulusIndexArray = [3 7 17 15 210 298 142 171 331]; % 1-433
         centerDiameter = 200 % um
         annulusInnerDiameter = 300 % um
         annulusOuterDiameter = 600 % um
@@ -17,6 +17,7 @@ classdef CSEyeMovementLuminance < edu.washington.riekelab.protocols.RiekeLabStag
         ampType
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'})
         currentStimulus
+        currentIndex
         centerTrajectory
         surroundTrajectory
         timeTraj

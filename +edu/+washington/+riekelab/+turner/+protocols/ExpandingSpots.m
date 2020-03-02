@@ -2,13 +2,13 @@ classdef ExpandingSpots < edu.washington.riekelab.protocols.RiekeLabStageProtoco
     
     properties
         preTime = 250 % ms
-        stimTime = 250 % ms
+        stimTime = 500 % ms
         tailTime = 250 % ms
         spotIntensity = 1.0 % (0-1)
-        spotSizes = [40 80 120 160 180 200 220 240 280 320 460 600] % um
+        spotSizes = [40 80 120 160 180 200 220 240 280 320 460 600 720] % um
         randomizeOrder = false
         backgroundIntensity = 0.5 % (0-1)
-        onlineAnalysis = 'none'
+        onlineAnalysis = 'extracellular'
         numberOfAverages = uint16(100) % number of epochs to queue
         amp % Output amplifier
     end
@@ -39,10 +39,7 @@ classdef ExpandingSpots < edu.washington.riekelab.protocols.RiekeLabStageProtoco
                 colors = [0 0 0];
             end
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
-            obj.showFigure('edu.washington.riekelab.turner.figures.MeanResponseFigure',...
-                obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
-                'groupBy',{'currentSpotSize'},...
-                'sweepColor',colors);
+
             obj.showFigure('edu.washington.riekelab.turner.figures.FrameTimingFigure',...
                 obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
             if ~strcmp(obj.onlineAnalysis,'none')
@@ -50,6 +47,16 @@ classdef ExpandingSpots < edu.washington.riekelab.protocols.RiekeLabStageProtoco
                 obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
                 'preTime',obj.preTime,'stimTime',obj.stimTime);
             end
+            if strcmp(obj.onlineAnalysis,'extracellular')
+                psth=true;
+            else
+                psth=false;
+             
+            end
+            obj.showFigure('edu.washington.riekelab.figures.MeanResponseFigure',...
+                obj.rig.getDevice(obj.amp),'psth', psth,...
+                'groupBy',{'currentSpotSize'},...
+                'sweepColor',colors);
             % Create spot size sequence.
             obj.spotSizeSequence = obj.spotSizes;
         end
