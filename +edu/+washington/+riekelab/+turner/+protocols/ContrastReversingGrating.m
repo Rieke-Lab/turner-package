@@ -17,6 +17,8 @@ classdef ContrastReversingGrating < edu.washington.riekelab.protocols.RiekeLabSt
         amp
     end
     
+        
+
     properties (Hidden)
         ampType
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'})
@@ -34,7 +36,7 @@ classdef ContrastReversingGrating < edu.washington.riekelab.protocols.RiekeLabSt
             didSetRig@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
-        
+
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             if length(obj.barWidth) > 1
