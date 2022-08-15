@@ -141,16 +141,16 @@ classdef ContrastReversingGratingPlusMean < edu.washington.riekelab.protocols.Ri
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3); %create presentation of specified duration
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity
             
-            % step background spot for specified time
-            spotDiameterPix = obj.rig.getDevice('Stage').um2pix(obj.backgroundDiameter);
-            background = stage.builtin.stimuli.Ellipse();
-            background.radiusX = spotDiameterPix/2;
-            background.radiusY = spotDiameterPix/2;
-            background.position = canvasSize/2;
-            p.addStimulus(background);
-            backgroundMean = stage.builtin.controllers.PropertyController(background, 'color',...
-                @(state)getBackgroundMean(obj, state.time));
-            p.addController(backgroundMean); %add the controller
+%             % step background spot for specified time
+%             spotDiameterPix = obj.rig.getDevice('Stage').um2pix(obj.backgroundDiameter);
+%             background = stage.builtin.stimuli.Ellipse();
+%             background.radiusX = spotDiameterPix/2;
+%             background.radiusY = spotDiameterPix/2;
+%             background.position = canvasSize/2;
+%             p.addStimulus(background);
+%             backgroundMean = stage.builtin.controllers.PropertyController(background, 'color',...
+%                 @(state)getBackgroundMean(obj, state.time));
+%             p.addController(backgroundMean); %add the controller
             
             index = mod(obj.numEpochsCompleted, length(obj.barWidthSequence)) + 1;
             if (index ~= 2) % grating
@@ -218,10 +218,11 @@ classdef ContrastReversingGratingPlusMean < edu.washington.riekelab.protocols.Ri
                 aperture.size = [apertureDiameterPix, apertureDiameterPix];
                 mask = stage.core.Mask.createCircularAperture(1, 1024); %circular aperture
                 aperture.setMask(mask);
+                aperture.color=obj.backgroundIntensity;
                 p.addStimulus(aperture); %add aperture
-                apertureMean = stage.builtin.controllers.PropertyController(aperture, 'color',...
-                    @(state)getBackgroundMean(obj, state.time));
-                p.addController(apertureMean); %add the controller
+%                 apertureMean = stage.builtin.controllers.PropertyController(aperture, 'color',...
+%                     @(state)getBackgroundMean(obj, state.time));
+%                 p.addController(apertureMean); %add the controller
             end
             
             % central mask - follows mean of background but not modulated
@@ -293,11 +294,11 @@ classdef ContrastReversingGratingPlusMean < edu.washington.riekelab.protocols.Ri
         end
         
         function tf = shouldContinuePreparingEpochs(obj)
-            tf = obj.numEpochsPrepared < obj.numberOfAverages;
+            tf = obj.numEpochsPrepared < obj.numberOfAverages*numel(obj.barWidth);
         end
         
         function tf = shouldContinueRun(obj)
-            tf = obj.numEpochsCompleted < obj.numberOfAverages;
+            tf = obj.numEpochsCompleted < obj.numberOfAverages*numel(obj.barWidth);
         end
         
         

@@ -9,6 +9,7 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
         apertureDiameter = 0 % um
         randomSeed = 1 % for eye movement trajectory
         D = 5; % Drift diffusion coefficient, in microns
+        backgroundScale = 0.1; % scale factor for background relative to image mean
         onlineAnalysis = 'none'
         numberOfAverages = uint16(5) % number of epochs to queue
         amp % Output amplifier
@@ -67,7 +68,7 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
 
             %1) restrict to desired patch mean luminance:
             imageMean = imageData.(fieldName).imageMean;
-            obj.backgroundIntensity = imageMean;%set the mean to the mean over the image
+            obj.backgroundIntensity = imageMean * obj.backgroundScale;%set the mean to the mean over the image with scale factor
             locationMean = imageData.(fieldName).patchMean;
             
             if strcmp(obj.patchMean,'all')
@@ -186,7 +187,9 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
             if (obj.apertureDiameter > 0) %% Create aperture
                 aperture = stage.builtin.stimuli.Rectangle();
                 aperture.position = canvasSize/2;
-                aperture.color = obj.backgroundIntensity;
+%                 aperture.color = obj.backgroundIntensity;
+                aperture.color = 0;
+
                 aperture.size = 2.*[max(canvasSize) max(canvasSize)];
                 mask = stage.core.Mask.createCircularAperture(apertureDiameterPix/(2*max(canvasSize)), 1024); %circular aperture
                 aperture.setMask(mask);

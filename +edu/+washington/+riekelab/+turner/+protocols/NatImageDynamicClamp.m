@@ -20,8 +20,9 @@ classdef NatImageDynamicClamp < edu.washington.riekelab.protocols.RiekeLabProtoc
     properties (Hidden)
         ampType
         ConductanceSetType = symphonyui.core.PropertyType('char', 'row',...
-            {'ONparasol_20160112Ec1','ONparasol_20160112Ec3','ONparasol_20160324Ec2',...
-            'OFFparasol_20160112Ec2','OFFparasol_20160324Ec4'})
+            {'ONparasol_20160913Cell3','ONparasol_20161011Cell5','ONparasol_20170309c',...
+            'ONparasol_20160112Ec1','ONparasol_20160112Ec3',...
+            'ONparasol_20160324Ec2','OFFparasol_20160112Ec2','OFFparasol_20160324Ec4'})
         ExcConductanceType = symphonyui.core.PropertyType('char', 'row', {'Image', 'Disc', 'Tonic'})
         InhConductanceType = symphonyui.core.PropertyType('char', 'row', {'Image', 'Disc', 'Tonic'})
         
@@ -134,7 +135,6 @@ classdef NatImageDynamicClamp < edu.washington.riekelab.protocols.RiekeLabProtoc
                     ddCount(obj.currentImageIndex) = newSpikeCount;
                 end
             end
-            
             hd = line(res.spikes.image,res.spikes.disc,'Parent',axesHandle);
             set(hd,'Color','g','LineStyle','none','Marker','x')
             yUp = 1.3*max([res.spikes.image,res.spikes.disc]);
@@ -206,6 +206,7 @@ classdef NatImageDynamicClamp < edu.washington.riekelab.protocols.RiekeLabProtoc
             end
             gen.waveshape = mappedConductanceTrace;
             stim = gen.generate();
+            %display(size(gen.waveshape));
         end
         
         function prepareEpoch(obj, epoch)
