@@ -169,4 +169,3 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
     end
     
 end
-

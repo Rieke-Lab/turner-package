@@ -6,7 +6,8 @@ classdef NaturalImageFlash < edu.washington.riekelab.turner.protocols.NaturalIma
         tailTime = 200 % ms
 
         apertureDiameter = 200 % um
-
+        surroundInnerDiameter = 300; %um
+        
         numberOfAverages = uint16(180) % number of epochs to queue
     end
     
@@ -71,8 +72,13 @@ classdef NaturalImageFlash < edu.washington.riekelab.turner.protocols.NaturalIma
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3);
             p.setBackgroundColor(obj.backgroundIntensity);
             
-            apertureDiameterPix = obj.rig.getDevice('Stage').um2pix(obj.apertureDiameter);
-            
+            apertureDiameterPix = obj.rig.getDevice('Stage').um2pix(obj.apertureDiameter)/6.6;
+            surroundInnerDiameterPix = obj.rig.getDevice('Stage').um2pix(obj.surroundInnerDiameter)/6.6;
+
+            distanceMatrix = createDistanceMatrix(size(obj.imagePatchMatrix, 1), size(obj.imagePatchMatrix, 2));
+            Indices = find(distanceMatrix > apertureDiameterPix & distanceMatrix < surroundInnerDiameterPix);
+            obj.imagePatchMatrix(Indices) = obj.backgroundIntensity * 255;
+      
             %make image stim:
             scene = stage.builtin.stimuli.Image(obj.imagePatchMatrix);
             scene.size = canvasSize; %scale up to canvas size
@@ -80,20 +86,20 @@ classdef NaturalImageFlash < edu.washington.riekelab.turner.protocols.NaturalIma
             % Use linear interpolation when scaling the image.
             scene.setMinFunction(GL.LINEAR);
             scene.setMagFunction(GL.LINEAR);
+            
             p.addStimulus(scene);
             sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
                 @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
             p.addController(sceneVisible);
 
-            if (obj.apertureDiameter > 0) %% Create aperture
-                aperture = stage.builtin.stimuli.Rectangle();
-                aperture.position = canvasSize/2;
-                aperture.color = obj.backgroundIntensity;
-                aperture.size = [max(canvasSize) max(canvasSize)];
-                mask = stage.core.Mask.createCircularAperture(apertureDiameterPix/max(canvasSize), 1024); %circular aperture
-                aperture.setMask(mask);
-                p.addStimulus(aperture); %add aperture
+            function m = createDistanceMatrix(xSize, ySize)
+                for x = 1:xSize
+                    for y = 1:ySize;
+                        m(x,y) = sqrt((x-xSize/2).^2 + (y-ySize/2).^2);
+                    end
+                end
             end
+
         end
         
         function tf = shouldContinuePreparingEpochs(obj)
