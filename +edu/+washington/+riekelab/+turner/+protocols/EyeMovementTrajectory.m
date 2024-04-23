@@ -5,12 +5,12 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
         stimTime = 4000 % ms
         tailTime = 200 % ms
         imageName = '00152' %van hateren image names
-        patchMean = 'all'
         apertureDiameter = 0 % um
         randomSeed = 1 % for eye movement trajectory
         D = 5; % Drift diffusion coefficient, in microns
         backgroundScale = 0.1; % scale factor for background relative to image mean
         onlineAnalysis = 'none'
+        patchMean='all'
         numberOfAverages = uint16(5) % number of epochs to queue
         amp % Output amplifier
     end
@@ -51,15 +51,15 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
                 obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
 
             % get current image and stim (library) set:
-            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
-            obj.currentImageSet = '/VHsubsample_20160105';
+            resourcesDir = 'C:\Users\Fred Rieke\Documents\chris-package\+edu\+washington\+riekelab\+chris\+resources\';
+            obj.currentImageSet = '\VHsubsample_20160105';
             obj.currentStimSet = 'SaccadeLocationsLibrary_20171011';
             load([resourcesDir,obj.currentStimSet,'.mat']);
             fieldName = ['imk', obj.imageName];
             
             %load appropriate image...
-            obj.currentStimSet = '/VHsubsample_20160105';
-            fileId=fopen([resourcesDir, obj.currentImageSet, '/imk', obj.imageName,'.iml'],'rb','ieee-be');
+            obj.currentStimSet = '\VHsubsample_20160105';
+            fileId=fopen([resourcesDir, obj.currentImageSet, '\imk', obj.imageName,'.iml'],'rb','ieee-be');
             img = fread(fileId, [1536,1024], 'uint16');
             img = double(img);
             img = (img./max(img(:))); %rescale s.t. brightest point is maximum monitor level
