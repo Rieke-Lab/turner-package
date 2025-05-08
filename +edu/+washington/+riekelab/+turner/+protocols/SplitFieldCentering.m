@@ -8,7 +8,7 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
         temporalFrequency = 4 % Hz
         spotDiameter = 300; % um
         maskDiameter = 0 % um
-        splitField = false 
+        splitField = false
         rotation = 0;  % deg
         backgroundIntensity = 0.5 % (0-1)
         onlineAnalysis = 'none'
@@ -20,11 +20,11 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
         ampType
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'})
     end
-       
+    
     properties (Hidden, Transient)
         analysisFigure
     end
-
+    
     methods
         
         function didSetRig(obj)
@@ -40,15 +40,20 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
             p = io.github.stage_vss.previews.StagePreview(panel, @()obj.createPresentation(), ...
                 'windowSize', obj.rig.getDevice('Stage').getCanvasSize());
         end
-
+        
+        
+        
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             
             obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            
             obj.showFigure('edu.washington.riekelab.turner.figures.MeanResponseFigure',...
                 obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis);
+            
             obj.showFigure('edu.washington.riekelab.turner.figures.FrameTimingFigure',...
                 obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
+            
             if ~strcmp(obj.onlineAnalysis,'none')
                 % custom figure handler
                 if isempty(obj.analysisFigure) || ~isvalid(obj.analysisFigure)
@@ -74,7 +79,7 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
             if strcmp(obj.onlineAnalysis,'extracellular') %spike recording
                 filterSigma = (20/1000)*sampleRate; %msec -> dataPts
                 newFilt = normpdf(1:10*filterSigma,10*filterSigma/2,filterSigma);
-                res = edu.washington.riekelab.turner.utils.spikeDetectorOnline(quantities,[],sampleRate);
+                res = edu.washington.riekelab.util.spikeDetectorOnline(quantities, [], sampleRate);
                 epochResponseTrace = zeros(size(quantities));
                 epochResponseTrace(res.sp) = 1; %spike binary
                 epochResponseTrace = sampleRate*conv(epochResponseTrace,newFilt,'same'); %inst firing rate
@@ -120,7 +125,7 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3); %create presentation of specified duration
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity
             
-            % Create grating stimulus.            
+            % Create grating stimulus.
             grate = stage.builtin.stimuli.Grating('square'); %square wave grating
             grate.orientation = obj.rotation;
             grate.size = [spotDiameterPix, spotDiameterPix];
@@ -136,7 +141,7 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
             p.addStimulus(grate); %add grating to the presentation
             
             %make it contrast-reversing
-            if (obj.temporalFrequency > 0) 
+            if (obj.temporalFrequency > 0)
                 grateContrast = stage.builtin.controllers.PropertyController(grate, 'contrast',...
                     @(state)getGrateContrast(obj, state.time - obj.preTime/1e3));
                 p.addController(grateContrast); %add the controller
@@ -167,7 +172,7 @@ classdef SplitFieldCentering < edu.washington.riekelab.protocols.RiekeLabStagePr
             grateVisible = stage.builtin.controllers.PropertyController(grate, 'visible', ...
                 @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
             p.addController(grateVisible);
-
+            
         end
         
         function prepareEpoch(obj, epoch)
