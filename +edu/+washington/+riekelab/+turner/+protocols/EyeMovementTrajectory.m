@@ -51,7 +51,7 @@ classdef EyeMovementTrajectory < edu.washington.riekelab.protocols.RiekeLabStage
                 obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
 
             % get current image and stim (library) set:
-            resourcesDir = 'C:\Users\Fred Rieke\Documents\chris-package\+edu\+washington\+riekelab\+chris\+resources\';
+            resourcesDir = 'C:\Users\chenq\Documents\turner-package\resources\';
             obj.currentImageSet = '\VHsubsample_20160105';
             obj.currentStimSet = 'SaccadeLocationsLibrary_20171011';
             load([resourcesDir,obj.currentStimSet,'.mat']);

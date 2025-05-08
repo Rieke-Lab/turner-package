@@ -16,11 +16,12 @@ classdef EyeMovementTrajectoryAlternatingBackground < edu.washington.riekelab.pr
     
     properties (Hidden)
         ampType
-        imageNames={'00152','00459','01151','01769','03760'};
+        imageNames={'00152','01769','03760'};
         patchMeanType = symphonyui.core.PropertyType('char', 'row', {'all','negative','positive'})
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'})
         backgroundIntensity
         currentBackgroundScale
+        currentImageMean
         imageMeans
         imageMatrixes
         currentImageMatrix
@@ -52,16 +53,16 @@ classdef EyeMovementTrajectoryAlternatingBackground < edu.washington.riekelab.pr
                 obj.rig.getDevice('Stage'), obj.rig.getDevice('Frame Monitor'));
             
             % get current image and stim (library) set:
-            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
-            obj.currentImageSet = '/VHsubsample_20160105';
+            resourcesDir = 'C:\Users\chenq\Documents\turner-package\resources\';
+            obj.currentImageSet = 'VHsubsample_20160105';
             obj.currentStimSet = 'SaccadeLocationsLibrary_20171011';
             load([resourcesDir,obj.currentStimSet,'.mat']);
             for i=1:numel(obj.imageNames)
                 fieldName = ['imk', obj.imageNames{i}];
                 
                 %load appropriate image...
-                obj.currentStimSet = '/VHsubsample_20160105';
-                fileId=fopen([resourcesDir, obj.currentImageSet, '/imk', obj.imageNames{i},'.iml'],'rb','ieee-be');
+                obj.currentStimSet = '\VHsubsample_20160105';
+                fileId=fopen([resourcesDir, obj.currentImageSet, '\imk', obj.imageNames{i},'.iml'],'rb','ieee-be');
                 img = fread(fileId, [1536,1024], 'uint16');
                 img = double(img);
                 img = (img./max(img(:))); %rescale s.t. brightest point is maximum monitor level
@@ -191,7 +192,7 @@ classdef EyeMovementTrajectoryAlternatingBackground < edu.washington.riekelab.pr
                 aperture = stage.builtin.stimuli.Rectangle();
                 aperture.position = canvasSize/2;
                 %                 aperture.color = obj.backgroundIntensity;
-                aperture.color = 0;
+                aperture.color = obj.currentImageMean;
                 
                 aperture.size = 2.*[max(canvasSize) max(canvasSize)];
                 mask = stage.core.Mask.createCircularAperture(apertureDiameterPix/(2*max(canvasSize)), 1024); %circular aperture
@@ -213,11 +214,13 @@ classdef EyeMovementTrajectoryAlternatingBackground < edu.washington.riekelab.pr
             imageIndex=  (obj.numEpochsCompleted-mod(obj.numEpochsCompleted,numel(obj.backgroundScale)))/numel(obj.backgroundScale);
             imageIndex=mod(imageIndex,length(obj.imageNames))+1;
             obj.currentBackgroundScale=obj.backgroundScale(bgIndex);
+            obj.currentImageMean=obj.imageMeans(imageIndex); 
             obj.backgroundIntensity=obj.imageMeans(imageIndex)*obj.currentBackgroundScale;
             obj.currentImageMatrix=obj.imageMatrixes{imageIndex}; 
             obj.currentP0= obj.p0(imageIndex,:); 
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
             epoch.addParameter('currentBackgroundScale', obj.currentBackgroundScale);
+            epoch.addParameter('currentImageMean', obj.currentImageMean);
             epoch.addParameter('currentImageName', obj.imageNames{imageIndex});
             epoch.addParameter('currentP0', obj.currentP0);
             epoch.addParameter('randomSeed', obj.randomSeed);
@@ -238,11 +241,11 @@ classdef EyeMovementTrajectoryAlternatingBackground < edu.washington.riekelab.pr
         % %         end
         
         function tf = shouldContinuePreparingEpochs(obj)
-            tf = obj.numEpochsPrepared < obj.numberOfAverages;
+            tf = obj.numEpochsPrepared < obj.numberOfAverages*numel(obj.backgroundScale)*numel(obj.imageNames);
         end
         
         function tf = shouldContinueRun(obj)
-            tf = obj.numEpochsCompleted < obj.numberOfAverages;
+            tf = obj.numEpochsCompleted <  obj.numberOfAverages*numel(obj.backgroundScale)*numel(obj.imageNames);
         end
         
     end

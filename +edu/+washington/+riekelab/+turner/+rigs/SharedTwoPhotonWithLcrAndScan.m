@@ -40,7 +40,7 @@ classdef SharedTwoPhotonWithLcrAndScan < symphonyui.core.descriptions.RigDescrip
             daq.getStream('doport1').setBitPosition(scanTrigger, 1);
             obj.addDevice(scanTrigger);
             %lightcrafter
-            lightCrafter = riekelab.devices.LightCrafterDevice('micronsPerPixel', 0.97);
+            lightCrafter = riekelab.devices.LightCrafterDevice('micronsPerPixel', 0.97,'host','SCIENTIFICA-PC');
             lightCrafter.bindStream(daq.getStream('doport1'));
             daq.getStream('doport1').setBitPosition(lightCrafter, 15);
   %             lightCrafter.addConfigurationSetting('ndfs', {}, ...
@@ -79,7 +79,7 @@ classdef SharedTwoPhotonWithLcrAndScan < symphonyui.core.descriptions.RigDescrip
             
             %Filter wheel
                 % Add the filter wheel.
-            filterWheel = edu.washington.riekelab.devices.FilterWheelDevice('comPort', 'COM4');
+            filterWheel = edu.washington.riekelab.devices.FilterWheelDevice('comPort', 'COM3');
             
                 % Binding the filter wheel to an unused stream only so its configuration settings are written to each epoch.
             daq = obj.daqController;
