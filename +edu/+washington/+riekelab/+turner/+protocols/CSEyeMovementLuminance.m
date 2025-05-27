@@ -48,7 +48,7 @@ classdef CSEyeMovementLuminance < edu.washington.riekelab.protocols.RiekeLabStag
             end
             
             %load data and get luminance trajectories
-            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
+            resourcesDir = 'C:\Users\Fred\Documents\turner-package\resources\';
             obj.currentStimSet = 'SaccadeLuminanceTrajectoryStimuli_20160919.mat';
             load([resourcesDir, obj.currentStimSet]);
             %pull the appropriate center & surround stimuli. Scale such

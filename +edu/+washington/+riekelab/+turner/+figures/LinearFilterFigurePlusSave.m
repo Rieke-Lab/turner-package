@@ -1,4 +1,4 @@
-classdef LinearFilterFigure < symphonyui.core.FigureHandler
+classdef LinearFilterFigurePlusSave < symphonyui.core.FigureHandler
     
     properties (SetAccess = private)
         ampDevice
@@ -27,7 +27,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
     
     methods
         
-        function obj = LinearFilterFigure(ampDevice, frameMonitor, stageDevice, varargin)
+        function obj = LinearFilterFigurePlusSave(ampDevice, frameMonitor, stageDevice, varargin)
             obj.ampDevice = ampDevice;
             obj.frameMonitor = frameMonitor;
             obj.stageDevice = stageDevice;
@@ -90,6 +90,26 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
             title(obj.axesHandle(2),'Nonlinearity');
             
             obj.figureHandle.Name = obj.figureTitle;
+            
+            % Add save button to the toolbar
+            saveButton = uipushtool( ...
+                'Parent', toolbar, ...
+                'TooltipString', 'Save Linear Filter', ...
+                'ClickedCallback', @obj.onSaveLinearFilter);
+
+            % Set an icon for the save button if available
+            setIconImage(saveButton, fullfile(iconDir, 'save.png'));
+
+        end
+        
+        function onSaveLinearFilter(obj, ~, ~)
+            % Callback for save button, prompts the user for a filename and saves the filter
+            [file, path] = uiputfile('*.mat', 'Save Linear Filter As');
+            if ischar(file)
+                linearFilter = obj.newFilter;  % assuming 'newFilter' holds the linear filter data
+                save(fullfile(path, file), 'linearFilter');  % Save with variable name 'filter'
+                msgbox('Linear filter saved successfully.', 'Save Complete');
+            end
         end
 
         function handleEpoch(obj, epoch)

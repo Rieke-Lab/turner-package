@@ -148,7 +148,7 @@ classdef StrfFigure < symphonyui.core.FigureHandler
             obj.newFilter = ((obj.epochCount - 1)*obj.newFilter + filterTmp) / obj.epochCount;
             
             filterTimes = linspace(0,filterLen,filterPts); %msec
-            targetTime = 30; %msec
+            targetTime = 50; %msec
             [~, snapShotInd] = min(abs(filterTimes - targetTime));
             if isempty(obj.imHandle)
                 obj.imHandle = imagesc(obj.newFilter(:,:,snapShotInd),...
@@ -165,7 +165,12 @@ classdef StrfFigure < symphonyui.core.FigureHandler
     methods (Access = private)
         
         function onSelectedPlayStrf(obj, ~, ~)
-            implay(obj.newFilter);
+            figure(4);
+            for frame = 1:size(obj.newFilter, 3)
+                imagesc(obj.newFilter(:, :, frame));
+                pause(0.5);
+            end
+%            implay(obj.newFilter);
         end
     end
 
