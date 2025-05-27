@@ -38,12 +38,8 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             
             % get current image and stim (library) set:
-<<<<<<< Updated upstream
-            resourcesDir = 'C:\Users\chenq\Documents\turner-package\+edu\+washington\+riekelab\+turner\+rescource\';
-=======
 %            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
             resourcesDir = 'C:\Users\Fred\Documents\turner-package\resources\';
->>>>>>> Stashed changes
             obj.currentImageSet = '/VHsubsample_20160105';
             obj.screenSize = obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel') .* ...
                 obj.rig.getDevice('Stage').getCanvasSize(); %microns
