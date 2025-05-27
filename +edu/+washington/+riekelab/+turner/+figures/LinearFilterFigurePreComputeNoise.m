@@ -1,4 +1,4 @@
-classdef LinearFilterFigure < symphonyui.core.FigureHandler
+classdef LinearFilterFigurePreComputeNoise < symphonyui.core.FigureHandler
     
     properties (SetAccess = private)
         ampDevice
@@ -8,6 +8,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
         preTime
         stimTime
         frameDwell
+        frameRate
         noiseStdv
         seedID
         updatePattern
@@ -27,7 +28,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
     
     methods
         
-        function obj = LinearFilterFigure(ampDevice, frameMonitor, stageDevice, varargin)
+        function obj = LinearFilterFigurePreComputeNoise(ampDevice, frameMonitor, stageDevice, varargin)
             obj.ampDevice = ampDevice;
             obj.frameMonitor = frameMonitor;
             obj.stageDevice = stageDevice;
@@ -36,6 +37,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
             ip.addParameter('preTime', [], @(x)isvector(x));
             ip.addParameter('stimTime', [], @(x)isvector(x));
             ip.addParameter('frameDwell', [], @(x)isvector(x));
+            ip.addParameter('frameRate', [], @(x)isvector(x));
             ip.addParameter('noiseStdv', 0.3, @(x)isvector(x));
             ip.addParameter('seedID', 'noiseSeed', @(x)ischar(x));
             ip.addParameter('figureTitle','Linear-Nonlinear analysis', @(x)ischar(x));
@@ -49,6 +51,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
             obj.preTime = ip.Results.preTime;
             obj.stimTime = ip.Results.stimTime;
             obj.frameDwell = ip.Results.frameDwell;
+            obj.frameRate = ip.Results.frameRate;
             obj.noiseStdv = ip.Results.noiseStdv;
             obj.seedID = ip.Results.seedID;
             obj.figureTitle = ip.Results.figureTitle;
@@ -121,12 +124,9 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
                 else %OLED stage device
                     lightCrafterFlag = 0;
                 end
-                frameRate = obj.stageDevice.getMonitorRefreshRate();
-                FMresponse = epoch.getResponse(obj.frameMonitor);
-                FMdata = FMresponse.getData();
-                frameTimes = edu.washington.riekelab.turner.utils.getFrameTiming(FMdata,lightCrafterFlag);
+                frameRate = obj.frameRate;
                 preFrames = frameRate*(obj.preTime/1000);
-                firstStimFrameFlip = frameTimes(preFrames+1);
+                firstStimFrameFlip = floor((preFrames+1)*sampleRate/frameRate); 
                 newResponse = newResponse(firstStimFrameFlip:end); %cut out pre-frames
                 %reconstruct noise stimulus
                 filterLen = 800; %msec, length of linear filter to compute
@@ -141,7 +141,7 @@ classdef LinearFilterFigure < symphonyui.core.FigureHandler
                 %reset random stream to recover stim trajectories
                 obj.noiseStream = RandStream('mt19937ar', 'Seed', currentNoiseSeed);
                 % get stim trajectories and response in frame updates
-                chunkLen = obj.frameDwell*mean(diff(frameTimes));
+                chunkLen = round(obj.frameDwell*sampleRate/frameRate);
                 for ii = 1:floor(stimFrames/obj.frameDwell)
                     noise(ii) = obj.noiseStdv * obj.noiseStream.randn;
                     response(ii) = mean(newResponse(round((ii-1)*chunkLen + 1) : round(ii*chunkLen)));
