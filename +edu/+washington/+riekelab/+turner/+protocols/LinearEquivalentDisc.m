@@ -8,6 +8,9 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
         apertureDiameter = 200 % um
         linearIntegrationFunction = 'gaussian'
         rfSigmaCenter = 50 % (um) Enter from fit RF
+        linearizeCones = false;
+        WeberConstant = 2000;
+        maxIntensity = 25000;
 
         numberOfAverages = uint16(180) % number of epochs to queue
     end
@@ -16,11 +19,13 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
         linearIntegrationFunctionType = symphonyui.core.PropertyType('char', 'row', {'gaussian','uniform'})
 
         allEquivalentIntensityValues
+        allEquivalentIntensityValuesConeLin
         
         %saved out to each epoch...
         imagePatchIndex
         currentPatchLocation
         equivalentIntensity
+        equivalentIntensityConeLin
         stimulusTag
     end
 
@@ -49,6 +54,9 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
             obj.allEquivalentIntensityValues = ...
                 edu.washington.riekelab.turner.protocols.NaturalImageFlashProtocol.getEquivalentIntensityValues(...
                 obj, 0, obj.apertureDiameter, obj.rfSigmaCenter);
+            obj.allEquivalentIntensityValuesConeLin = ...
+                edu.washington.riekelab.turner.protocols.NaturalImageFlashProtocol.getEquivalentIntensityValuesConeLin(...
+                obj, 0, obj.apertureDiameter, obj.rfSigmaCenter);
         end
         
         function prepareEpoch(obj, epoch)
@@ -59,16 +67,30 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
             epoch.addResponse(device);
 
             %pull patch location and equivalent contrast:
-            obj.imagePatchIndex = floor(mod(obj.numEpochsCompleted/2,obj.noPatches) + 1);
-            evenInd = mod(obj.numEpochsCompleted,2);
-            if evenInd == 1 %even, show uniform linear equivalent intensity
-                obj.stimulusTag = 'intensity';
-            elseif evenInd == 0 %odd, show image
-                obj.stimulusTag = 'image';
+            if (obj.linearizeCones == 0)
+                obj.imagePatchIndex = floor(mod(obj.numEpochsCompleted/2,obj.noPatches) + 1);
+                evenInd = mod(obj.numEpochsCompleted,2);
+                if evenInd == 1 %even, show uniform linear equivalent intensity
+                    obj.stimulusTag = 'intensity';
+                elseif evenInd == 0 %odd, show image
+                    obj.stimulusTag = 'image';
+                end
+            else
+                obj.imagePatchIndex = floor(mod(obj.numEpochsCompleted/3,obj.noPatches) + 1);
+                stimInd = mod(obj.numEpochsCompleted,3);
+                if stimInd == 1 %even, show uniform linear equivalent intensity
+                    obj.stimulusTag = 'intensity';
+                elseif stimInd == 0 %odd, show image
+                    obj.stimulusTag = 'image';
+                else
+                    obj.stimulusTag = 'lin cone intensity';
+                end
             end
+            
             obj.currentPatchLocation(1) = obj.patchLocations(1,obj.imagePatchIndex); %in VH pixels
             obj.currentPatchLocation(2) = obj.patchLocations(2,obj.imagePatchIndex);
             obj.equivalentIntensity = obj.allEquivalentIntensityValues(obj.imagePatchIndex);
+            obj.equivalentIntensityConeLin = obj.allEquivalentIntensityValuesConeLin(obj.imagePatchIndex);
             
             obj.imagePatchMatrix = ...
                 edu.washington.riekelab.turner.protocols.NaturalImageFlashProtocol.getImagePatchMatrix(...
@@ -77,7 +99,9 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
             epoch.addParameter('imagePatchIndex', obj.imagePatchIndex);
             epoch.addParameter('currentPatchLocation', obj.currentPatchLocation);
             epoch.addParameter('equivalentIntensity', obj.equivalentIntensity);
+            epoch.addParameter('equivalentIntensityConeLin', obj.equivalentIntensity);
             epoch.addParameter('stimulusTag', obj.stimulusTag);
+ %           fprintf(1, '%s %d %d %d\n', obj.stimulusTag, obj.imagePatchIndex, obj.equivalentIntensity, obj.equivalentIntensityConeLin);
         end
         
         function p = createPresentation(obj)            
@@ -102,6 +126,15 @@ classdef LinearEquivalentDisc < edu.washington.riekelab.turner.protocols.Natural
                 scene = stage.builtin.stimuli.Rectangle();
                 scene.size = canvasSize;
                 scene.color = obj.equivalentIntensity;
+                scene.position = canvasSize/2;
+                p.addStimulus(scene);
+                sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
+                    @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
+                p.addController(sceneVisible);
+            else
+                scene = stage.builtin.stimuli.Rectangle();
+                scene.size = canvasSize;
+                scene.color = obj.equivalentIntensityConeLin;
                 scene.position = canvasSize/2;
                 p.addStimulus(scene);
                 sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...

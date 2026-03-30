@@ -33,10 +33,7 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
         centerContrasts
         weightingFxn
         centerSigmaPix
-<<<<<<< Updated upstream
-=======
         imageType
->>>>>>> Stashed changes
     end
     
     methods
@@ -50,24 +47,13 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
             
-<<<<<<< Updated upstream
-            if ~obj.isMeaRig
-                obj.showFigure('manookinlab.figures.ResponseFigure', obj.rig.getDevices('Amp'), ...
-                    'numberOfAverages', obj.numberOfAverages);
-
-                obj.showFigure('manookinlab.figures.MeanResponseFigure', ...
-                    obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
-                    'sweepColor',[0 0 0]);
-            end
-=======
             obj.showFigure('manookinlab.figures.ResponseFigure', obj.rig.getDevices('Amp'), ...
                 'numberOfAverages', obj.numberOfAverages);
 
             obj.showFigure('manookinlab.figures.MeanResponseFigure', ...
                 obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
                 'sweepColor',[0 0 0]);
->>>>>>> Stashed changes
-            
+
             % Get the resources directory.
             obj.pkgDir = manookinlab.Package.getResourcePath();
             fprintf(1, '%s\n', obj.pkgDir);
@@ -146,24 +132,21 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
             imagePatchX = round(obj.canvasSize(1)*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3); %VH pixels displayed in the whole canvas (x)
             imagePatchY = round(obj.canvasSize(2)*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3); %VH pixels displayed in the whole canvas (y)
 
-<<<<<<< Updated upstream
-=======
+
             fprintf(1, '%d %d %d %d %d\n', imagePatchX, imagePatchY, ...
                 obj.canvasSize(1), obj.canvasSize(2),obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel'));
             
->>>>>>> Stashed changes
+            fprintf(1, '%d %d %d %d %d\n', imagePatchX, imagePatchY, ...
+                obj.canvasSize(1), obj.canvasSize(2),obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel'));
+            
             %account for flips in stage presentation versus indexing.
             %xy flipped for stage shifting, and y is flipped for
             %indexing convention in matlab. Y flips cancel.
             centerSigmaVHPix = round(obj.centerSigma*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3);
 
             %2 stdev width of RF is aperture size
-<<<<<<< Updated upstream
-            obj.weightingFxn = fspecial('gaussian', centerSigmaVHPix*2, centerSigmaVHPix);
-=======
             %obj.weightingFxn = fspecial('gaussian', centerSigmaVHPix*2, centerSigmaVHPix);
             obj.weightingFxn = ones(centerSigmaVHPix*2);
->>>>>>> Stashed changes
             filtSizeX = size(obj.weightingFxn, 1);
             filtSizeY = size(obj.weightingFxn, 2);
             [rr, cc] = meshgrid(1:filtSizeX,1:filtSizeY);
@@ -173,11 +156,7 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
              
             % calculate equivalent contrast for each frame (in VH pixels)
             for t=1:length(obj.centerContrasts) %frame by frame, pull out rectangle centered over fixation point
-<<<<<<< Updated upstream
-                fixX = xTraj(t)+size(img, 2)/2; fixY = yTraj(t)+size(img, 1)/2; %center of fixation
-=======
                 fixX = -xTraj(t)+size(img, 2)/2; fixY = yTraj(t)+size(img, 1)/2; %center of fixation
->>>>>>> Stashed changes
                 %pull out current frame of stim, then do whatever
                 %contrast integration computation selected... 
                 currentFrame = img(round(fixY-filtSizeY/2+1):round(fixY+filtSizeY/2),...
@@ -210,34 +189,20 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
                     'position', @(state)getScenePosition(obj, state.time - (obj.preTime+obj.waitTime)/1e3, p0));
                 %Add the controller.
                 p.addController(scenePosition);
-<<<<<<< Updated upstream
-=======
                 obj.imageType = 'image';
->>>>>>> Stashed changes
-
             else
                 % Create center that modulates according to contrast
                 % integration
                 scene = stage.builtin.stimuli.Ellipse();
                 scene.position = obj.canvasSize/2;
-<<<<<<< Updated upstream
-                scene.color = 0; %obj.backgroundIntensity;
-=======
                 scene.color = obj.backgroundIntensity;
->>>>>>> Stashed changes
                 scene.radiusX = centerSigmaPix;
                 scene.radiusY = centerSigmaPix;
                 p.addStimulus(scene)
                 contrastLevel = stage.builtin.controllers.PropertyController(scene,...
-<<<<<<< Updated upstream
-                    'color',@(state)getContrastLevel(obj, state.time - obj.preTime/1e3));
-                p.addController(contrastLevel);
-            
-=======
                     'color',@(state)getContrastLevel(obj, state.time - (obj.preTime+obj.waitTime)/1e3));
                 p.addController(contrastLevel);
                 obj.imageType = 'disc';
->>>>>>> Stashed changes
             end
             
             % stimulus timing
@@ -273,15 +238,10 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
             end
             
             function i = getContrastLevel(obj, time)
-<<<<<<< Updated upstream
-                if time < 0
-                    i = obj.backgroundIntensity;
-=======
                 if time < -obj.waitTime
                     i = obj.backgroundIntensity;
                 elseif time < 0
                     i = obj.centerContrasts(1);
->>>>>>> Stashed changes
                 elseif time > obj.timeTraj(end) %out of eye trajectory, hang on last frame
                     i = obj.backgroundIntensity;
                 else %within eye trajectory and stim time
@@ -309,10 +269,7 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
             epoch.addParameter('currentStimSet',obj.currentStimSet);
-<<<<<<< Updated upstream
-=======
             epoch.addParameter('imageType',obj.imageType);
->>>>>>> Stashed changes
         end
         
         % Same presentation each epoch in a run. Replay.
