@@ -36,17 +36,29 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
         
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
+            % NaturalImageFlashProtocol.m is in .../+turner/+protocols
+            % resources is in .../+turner/+resources
+            thisFile = mfilename('fullpath');
+            protocolDir = fileparts(thisFile);
+            turnerDir = fileparts(protocolDir);
+            resourcesDir = fullfile(turnerDir, '+resources/');
             
-%            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
-            resourcesDir = 'C:\Users\Fred\Documents\turner-package\resources\';
-            obj.currentImageSet = '/VHsubsample_20160105';
+            obj.currentImageSet = 'VHsubsample_20160105';
             obj.screenSize = obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel') .* ...
-                obj.rig.getDevice('Stage').getCanvasSize(); %microns
-            obj.currentStimSet = 'NaturalImageFlashLibrary_120117'; %OLED on rigs F,E,B
-
+                obj.rig.getDevice('Stage').getCanvasSize(); % microns
+            obj.currentStimSet = 'NaturalImageFlashLibrary_120117'; % OLED on rigs F,E,B
             
-            % get the image and scale it:
-            fileId=fopen([resourcesDir, obj.currentImageSet, '/imk', obj.imageName,'.iml'],'rb','ieee-be');
+            % get the image and scale it
+            imageFile = fullfile(resourcesDir, obj.currentImageSet, ['imk' obj.imageName '.iml']);
+            fileId = fopen(imageFile, 'rb', 'ieee-be');
+            if fileId == -1
+                error('NaturalImageFlashProtocol:ImageOpenFailed', ...
+                    'Could not open image file: %s', imageFile);
+            end
+            
+            cleanupObj = onCleanup(@() fclose(fileId)); 
+            
+            
             img = fread(fileId, [1536,1024], 'uint16');
             img = double(img);
             img = (img./max(img(:))); %rescale s.t. brightest point is maximum monitor level
