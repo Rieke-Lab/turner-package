@@ -47,7 +47,10 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
             
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2f78ac1a9ae7ee9c9d3573f520ffa5d75ee03676
             obj.showFigure('manookinlab.figures.ResponseFigure', obj.rig.getDevices('Amp'), ...
                 'numberOfAverages', obj.numberOfAverages);
 
@@ -133,20 +136,35 @@ classdef DovesMoviePlusLinearEquiv < manookinlab.protocols.ManookinLabStageProto
             imagePatchX = round(obj.canvasSize(1)*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3); %VH pixels displayed in the whole canvas (x)
             imagePatchY = round(obj.canvasSize(2)*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3); %VH pixels displayed in the whole canvas (y)
 
+<<<<<<< HEAD
             fprintf(1, '%d %d %d %d %d\n', imagePatchX, imagePatchY, ...
                 obj.canvasSize(1), obj.canvasSize(2),obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel'));
             
 
+=======
+
+            fprintf(1, '%d %d %d %d %d\n', imagePatchX, imagePatchY, ...
+                obj.canvasSize(1), obj.canvasSize(2),obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel'));
+            
+            fprintf(1, '%d %d %d %d %d\n', imagePatchX, imagePatchY, ...
+                obj.canvasSize(1), obj.canvasSize(2),obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel'));
+            
+>>>>>>> 2f78ac1a9ae7ee9c9d3573f520ffa5d75ee03676
             %account for flips in stage presentation versus indexing.
             %xy flipped for stage shifting, and y is flipped for
             %indexing convention in matlab. Y flips cancel.
             centerSigmaVHPix = round(obj.centerSigma*obj.rig.getDevice('Stage').getConfigurationSetting('micronsPerPixel')/3.3);
 
             %2 stdev width of RF is aperture size
+<<<<<<< HEAD
 
             %obj.weightingFxn = fspecial('gaussian', centerSigmaVHPix*2, centerSigmaVHPix);
             obj.weightingFxn = ones(centerSigmaVHPix*2);
 
+=======
+            %obj.weightingFxn = fspecial('gaussian', centerSigmaVHPix*2, centerSigmaVHPix);
+            obj.weightingFxn = ones(centerSigmaVHPix*2);
+>>>>>>> 2f78ac1a9ae7ee9c9d3573f520ffa5d75ee03676
             filtSizeX = size(obj.weightingFxn, 1);
             filtSizeY = size(obj.weightingFxn, 2);
             [rr, cc] = meshgrid(1:filtSizeX,1:filtSizeY);

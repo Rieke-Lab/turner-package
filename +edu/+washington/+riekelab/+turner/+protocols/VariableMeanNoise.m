@@ -7,9 +7,10 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
         stimTime = 600                  % Noise duration (ms)
         frequencyCutoff = 60            % Noise frequency cutoff for smoothing (Hz)
         numberOfFilters = 4             % Number of filters in cascade for noise smoothing
-        Contrast = [0.125 0.25 0.5]                  % Noise contrast
+        Contrast = [0.125 0.25 0.5]     % Noise contrast
         useRandomSeed = true            % Use a random seed for each standard deviation multiple?
-        lightMean = [0.1 0.3 1 3]       % Noise and LED background mean (V or norm. [0-1] depending on LED units)
+        sequentialMeans = true          % go through means in sequence or randomly
+        lightMean = [0.1 0.3 1 3]       % LED background mean (V or norm. [0-1] depending on LED units)
         amp                             % Input amplifier
     end
     
@@ -17,7 +18,7 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
         amp2                            % Secondary amplifier
     end
     
-    properties 
+    properties
         numberOfAverages = uint16(5)    % Number of families
         interpulseInterval = 0          % Duration between noise stimuli (s)
     end
@@ -25,18 +26,22 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
     properties (Hidden)
         ledType
         ampType
+        lightMeanSequence
+        lightContrastSequence
     end
     
     methods
                 
         function didSetRig(obj)
             didSetRig@edu.washington.riekelab.protocols.RiekeLabProtocol(obj);
+            
             [obj.led, obj.ledType] = obj.createDeviceNamesProperty('LED');
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
         function d = getPropertyDescriptor(obj, name)
             d = getPropertyDescriptor@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, name);
+            
             if strncmp(name, 'amp2', 4) && numel(obj.rig.getDeviceNames('Amp')) < 2
                 d.isHidden = true;
             end
@@ -72,8 +77,7 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
                 obj.showFigure('edu.washington.riekelab.figures.DualMeanResponseFigure', obj.rig.getDevice(obj.amp), obj.rig.getDevice(obj.amp2), ...
                     'groupBy1', {'stdv'}, ...
                     'groupBy2', {'stdv'});
-                obj.showFigure('edu.washington.riekelab.figures.DualResponseStatisticsFigure', ...,
-                    obj.rig.getDevice(obj.amp), {@mean, @var}, obj.rig.getDevice(obj.amp2), {@mean, @var}, ...
+                obj.showFigure('edu.washington.riekelab.figures.DualResponseStatisticsFigure', obj.rig.getDevice(obj.amp), {@mean, @var}, obj.rig.getDevice(obj.amp2), {@mean, @var}, ...
                     'baselineRegion1', [0 obj.stimTime], ...
                     'measurementRegion1', [0 obj.stimTime], ...
                     'baselineRegion2', [0 obj.stimTime], ...
@@ -82,13 +86,22 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
             
             device = obj.rig.getDevice(obj.led);
             device.background = symphonyui.core.Measurement(obj.lightMean(1), device.background.displayUnits);
+            if ~obj.useRandomSeed
+                rng('default');
+            end
+            if ~obj.sequentialMeans
+                obj.lightMeanSequence = obj.lightMean(randi([1 length(obj.lightMean)], obj.numberOfAverages, 1));
+            else
+                obj.lightMeanSequence = repmat(obj.lightMean, 1, ceil(obj.numberOfAverages/length(obj.lightMean)));
+            end
+            obj.lightContrastSequence = obj.Contrast(randi([1 length(obj.Contrast)], obj.numberOfAverages, 1));
         end
         
-        function [stim, stdv] = createLedStimulus(obj, pulseNum, seed)
-            lightMean = obj.lightMean(randi([1 length(obj.lightMean)]));
-            lightContrast = obj.Contrast(randi([1 length(obj.Contrast)]));
+        function [stim, lightMean, stdv] = createLedStimulus(obj, pulseNum, seed)
+            lightMean = obj.lightMeanSequence(pulseNum);
+            lightContrast = obj.lightContrastSequence(pulseNum);
             stdv = lightMean * lightContrast;
-            
+                        
             gen = edu.washington.riekelab.stimuli.GaussianNoiseGeneratorV2();
             
             gen.preTime = 0;
@@ -117,12 +130,14 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
             
             persistent seed;
             if ~obj.useRandomSeed
-                seed = 0;
+                seed = obj.numEpochsPrepared;
             else
                 seed = RandStream.shuffleSeed;
             end
             
-            [stim, stdv] = obj.createLedStimulus(obj.numEpochsPrepared, seed);
+            [stim, lightMean, stdv] = obj.createLedStimulus(obj.numEpochsPrepared, seed);
+            
+            epoch.addParameter('lightMean', lightMean);
             epoch.addParameter('stdv', stdv);
             epoch.addParameter('seed', seed);
             epoch.addStimulus(obj.rig.getDevice(obj.led), stim);
@@ -135,6 +150,7 @@ classdef VariableMeanNoise < edu.washington.riekelab.protocols.RiekeLabProtocol
         
         function prepareInterval(obj, interval)
             prepareInterval@edu.washington.riekelab.protocols.RiekeLabProtocol(obj, interval);
+            
             device = obj.rig.getDevice(obj.led);
             interval.addDirectCurrentStimulus(device, device.background, obj.interpulseInterval, obj.sampleRate);
         end

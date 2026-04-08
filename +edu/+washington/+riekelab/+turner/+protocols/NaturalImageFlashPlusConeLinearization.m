@@ -1,4 +1,4 @@
-classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocols.RiekeLabStageProtocol
+classdef (Abstract) NaturalImageFlashPlusConeLinearization < edu.washington.riekelab.protocols.RiekeLabStageProtocol
     properties
         noPatches = 20 %number of different image patches (fixations) to show
         
@@ -38,11 +38,8 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             
             % get current image and stim (library) set:
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 2f78ac1a9ae7ee9c9d3573f520ffa5d75ee03676
 %            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
             resourcesDir = 'C:\Users\Fred\Documents\turner-package\resources\';
             obj.currentImageSet = '/VHsubsample_20160105';
@@ -58,6 +55,15 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
             img = (img./max(img(:))); %rescale s.t. brightest point is maximum monitor level
             obj.backgroundIntensity = mean(img(:));%set the mean to the mean over the image
             obj.contrastImage = (img - obj.backgroundIntensity) ./ obj.backgroundIntensity;
+            if (obj.linearizeCones)
+%                 intensImg = img * obj.maxIntensity;
+%                 coneGain = 1 ./ (1 + intensImg/obj.WeberConstant);
+%                 coneGain = coneGain ./ (1 / (1 + mean(intensImg(:))/obj.WeberConstant));
+%                 obj.contrastImage = obj.contrastImage ./ coneGain;
+                indices = find(obj.contrastImage(:) < 0);
+                obj.contrastImage(indices) = obj.contrastImage(indices) * obj.IncDecAsymmetry;
+            end
+            img = obj.backgroundIntensity + obj.backgroundIntensity .* obj.contrastImage;
             img = img.*255; %rescale s.t. brightest point is maximum monitor level
             obj.wholeImageMatrix = uint8(img);
 
@@ -161,55 +167,6 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
             end
             
         end
-        function allEquivalentIntensityValuesConeLin =  getEquivalentIntensityValuesConeLin(obj,innerDiameter,outerDiameter,RFsigma)
-            %outerDiameter is circle in which to integrate. innerDiameter
-            %is the size of a circle to mask off before integration.
-            %e.g. center RF (Linear equivalent disc): innerDiameter = 0
-            %   surround RF (Linear equivalent annulus): innerDiameter > 0
-            stimSize_VHpix = obj.screenSize ./ (6.6); %um / (um/pixel) -> pixel
-            radX = floor(stimSize_VHpix(1) / 2); %boundaries for fixation draws depend on stimulus size
-            radY = floor(stimSize_VHpix(2) / 2);
-            
-            % Get the model RF:
-            RFsigma = RFsigma ./ 6.6; %microns -> VH pixels
-            RF = fspecial('gaussian',2.*[radX radY],RFsigma);
-
-            % Get the aperture to apply to the image...
-            %   set to 1 = values to be included (i.e. image is shown there)
-            [rr, cc] = meshgrid(1:(2*radX),1:(2*radY));
-            apertureMatrix = sqrt((rr-radX).^2 + ...
-                (cc-radY).^2) < (outerDiameter/2) ./ 6.6;
-            apertureMatrix = apertureMatrix';
-            
-            if innerDiameter > 0
-                maskMatrix = sqrt((rr-radX).^2 + ...
-                    (cc-radY).^2) > (innerDiameter/2) ./ 6.6;
-                maskMatrix = maskMatrix';
-                apertureMatrix = min(maskMatrix,apertureMatrix); 
-            end
-
-            if strcmp(obj.linearIntegrationFunction,'gaussian')
-                weightingFxn = apertureMatrix .* RF; %set to zero mean gray pixels
-            elseif strcmp(obj.linearIntegrationFunction,'uniform')
-                weightingFxn = apertureMatrix;
-            end
-            weightingFxn = weightingFxn ./ sum(weightingFxn(:)); %sum to one
-            
-            allEquivalentIntensityValuesConeLin = zeros(1,obj.noPatches);
-            for ff = 1:obj.noPatches
-                tempPatch = obj.contrastImage(round(obj.patchLocations(1,ff)-radX)+1:round(obj.patchLocations(1,ff)+radX),...
-                    round(obj.patchLocations(2,ff)-radY)+1:round(obj.patchLocations(2,ff)+radY));
-                tempPatchIsoms = (tempPatch + 1) * obj.backgroundIntensity * obj.maxIntensity;
-                rfFactor = sum(sum(weightingFxn .* (tempPatchIsoms - obj.backgroundIntensity*obj.maxIntensity) ./ ...
-                    (1 + tempPatchIsoms/obj.WeberConstant)));
-                equivalentContrast = rfFactor * (1 + obj.backgroundIntensity*obj.maxIntensity/obj.WeberConstant) / ...
-                    (1 - rfFactor/obj.WeberConstant);
-                equivalentContrast = equivalentContrast / (obj.backgroundIntensity * obj.maxIntensity);
-                allEquivalentIntensityValuesConeLin(ff) = obj.backgroundIntensity + ...
-                    equivalentContrast * obj.backgroundIntensity;
-            end
-            
-        end
         function imagePatchMatrix =  getImagePatchMatrix(obj,currentPatchLocation)
             %imagePatchMatrix is in VH pixels
             stimSize_VHpix = obj.screenSize ./ (6.6); %um / (um/pixel) -> pixel
@@ -219,18 +176,6 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
                 round(currentPatchLocation(2)-radY)+1:round(currentPatchLocation(2)+radY));
             imagePatchMatrix = imagePatchMatrix';
 
-        end
-        function imagePatchMatrix =  getImagePatchMatrixLinearized(obj,currentPatchLocation)
-            %imagePatchMatrix is in VH pixels
-            stimSize_VHpix = obj.screenSize ./ (6.6); %um / (um/pixel) -> pixel
-            radX = floor(stimSize_VHpix(1) / 2);
-            radY = floor(stimSize_VHpix(2) / 2);
-            imagePatchMatrix = obj.wholeImageMatrix(round(currentPatchLocation(1)-radX)+1:round(currentPatchLocation(1)+radX),...
-                round(currentPatchLocation(2)-radY)+1:round(currentPatchLocation(2)+radY));
-            tempImage = double(imagePatchMatrix) / 255;
-            coneGain = 1 ./ (1 + tempImage * obj.maxIntensity / obj.WeberConstant);
-            backgroundConeGain = 1 / (1 + obj.maxIntensity * obj.backgroundIntensity / obj.WeberConstant);
-            imagePatchMatrix = uint8(255*tempImage .* coneGain / backgroundConeGain);
         end
  
     end

@@ -47,7 +47,7 @@ classdef DOVEScsAdditivity < edu.washington.riekelab.protocols.RiekeLabStageProt
             
             %load eye movement stimulus data
             %Change to resources directory
-            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
+            resourcesDir = 'C:\Users\Fred\Documents\turner-package\+edu\+washington\+riekelab\+turner\+resources\';
             obj.currentStimSet = 'dovesFEMstims_20160422.mat';
             load([resourcesDir, obj.currentStimSet]);
             imageName = FEMdata(obj.stimulusIndex).ImageName;
