@@ -37,12 +37,6 @@ classdef (Abstract) NaturalImageFlashProtocol < edu.washington.riekelab.protocol
         function prepareRun(obj)
             prepareRun@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             
-            % get current image and stim (library) set:
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 2f78ac1a9ae7ee9c9d3573f520ffa5d75ee03676
 %            resourcesDir = 'C:\Users\Public\Documents\turner-package\resources\';
             resourcesDir = 'C:\Users\Fred\Documents\turner-package\resources\';
             obj.currentImageSet = '/VHsubsample_20160105';
